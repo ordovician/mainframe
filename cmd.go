@@ -64,9 +64,9 @@ DESCRIPTION
 func (cmd *ListCmd) Run(w io.Writer, args []string) {
 	entries, _ := storage.ReadDir("data")
 	for _, entry := range entries {
-		fmt.Println(entry.Name())
+		fmt.Fprintln(w, entry.Name())
 	}
-	fmt.Println()
+	fmt.Fprintln(w)
 }
 
 func (cmd *CatCmd) Name() string {
@@ -84,7 +84,7 @@ DESCRIPTION
 
 func (cmd *CatCmd) Run(w io.Writer, args []string) {
 	if len(args) < 1 {
-		fmt.Println("Missing file argument")
+		fmt.Fprintln(w, "Missing file argument")
 	} else {
 		for _, arg := range args {
 			filepath := path.Join("data", arg)
@@ -92,7 +92,7 @@ func (cmd *CatCmd) Run(w io.Writer, args []string) {
 			if err != nil {
 				fmt.Fprintln(os.Stderr, "Could not read file:", err)
 			}
-			fmt.Println(string(content))
+			fmt.Fprintln(w, string(content))
 		}
 	}
 }
@@ -112,7 +112,7 @@ DESCRIPTION
 
 func (cmd *DecryptCmd) Run(w io.Writer, args []string) {
 	if len(args) < 1 {
-		fmt.Println("Missing file argument")
+		fmt.Fprintln(w, "Missing file argument")
 	} else {
 		key, err := loadKey()
 		if err != nil {
@@ -127,7 +127,7 @@ func (cmd *DecryptCmd) Run(w io.Writer, args []string) {
 				fmt.Fprintf(os.Stderr, "Could not read file %s: %s\n", arg, err)
 				break
 			}
-			fmt.Println(msg)
+			fmt.Fprintln(w, msg)
 		}
 	}
 }
