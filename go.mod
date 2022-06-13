@@ -1,3 +1,3 @@
-module github.com/ordovician/BESM-6
+module github.com/ordovician/mainframe
 
 go 1.18
