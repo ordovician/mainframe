@@ -2,15 +2,14 @@ package mainframe
 
 import (
 	"fmt"
-	"io"
 	"os"
 	"path"
 )
 
 type Command interface {
 	Name() string
-	Help(w io.Writer)
-	Run(w io.Writer, args []string)
+	Help(term *Terminal)
+	Run(term *Terminal, args []string)
 }
 
 type HelpCmd struct{}
@@ -23,8 +22,8 @@ func (cmd *HelpCmd) Name() string {
 	return "help"
 }
 
-func (cmd *HelpCmd) Help(w io.Writer) {
-	fmt.Fprintln(w, `NAME
+func (cmd *HelpCmd) Help(term *Terminal) {
+	fmt.Fprintln(term.Stdout, `NAME
     help -- give help for a command
 SYNOPSIS
     help command
@@ -32,18 +31,18 @@ DESCRIPTION
     The help command displays help for a command.`)
 }
 
-func (cmd *HelpCmd) Run(w io.Writer, args []string) {
+func (cmd *HelpCmd) Run(term *Terminal, args []string) {
 	if len(args) == 0 {
-		fmt.Fprintln(w, `Valid commands:
+		fmt.Fprintln(term.Stdout, `Valid commands:
     ls   cat   decrypt	exit   help`)
 		return
 	}
 
 	helpCmd := Lookup(args[0])
 	if helpCmd == nil {
-		fmt.Fprintln(w, "Unknown command:", args[0])
+		fmt.Fprintln(term.Stdout, "Unknown command:", args[0])
 	} else {
-		helpCmd.Help(w)
+		helpCmd.Help(term)
 	}
 
 }
@@ -52,8 +51,8 @@ func (cmd *ListCmd) Name() string {
 	return "ls"
 }
 
-func (cmd *ListCmd) Help(w io.Writer) {
-	fmt.Fprintln(w, `NAME
+func (cmd *ListCmd) Help(term *Terminal) {
+	fmt.Fprintln(term.Stdout, `NAME
 	ls -- list content of current directory
 SYNOPSIS
     ls [directory]
@@ -61,20 +60,20 @@ DESCRIPTION
     The ls command shows all files and directories in working directory`)
 }
 
-func (cmd *ListCmd) Run(w io.Writer, args []string) {
+func (cmd *ListCmd) Run(term *Terminal, args []string) {
 	entries, _ := storage.ReadDir("data")
 	for _, entry := range entries {
-		fmt.Fprintln(w, entry.Name())
+		fmt.Fprintln(term.Stdout, entry.Name())
 	}
-	fmt.Fprintln(w)
+	fmt.Fprintln(term.Stdout)
 }
 
 func (cmd *CatCmd) Name() string {
 	return "cat"
 }
 
-func (cmd *CatCmd) Help(w io.Writer) {
-	fmt.Fprintln(w, `NAME
+func (cmd *CatCmd) Help(term *Terminal) {
+	fmt.Fprintln(term.Stdout, `NAME
     cat -- concatenate and print files
 SYNOPSIS
     cat [file ...]
@@ -82,17 +81,17 @@ DESCRIPTION
     The cat utility reads files sequentually and write them to standard output.`)
 }
 
-func (cmd *CatCmd) Run(w io.Writer, args []string) {
+func (cmd *CatCmd) Run(term *Terminal, args []string) {
 	if len(args) < 1 {
-		fmt.Fprintln(w, "Missing file argument")
+		fmt.Fprintln(term.Stdout, "Missing file argument")
 	} else {
 		for _, arg := range args {
 			filepath := path.Join("data", arg)
 			content, err := storage.ReadFile(filepath)
 			if err != nil {
-				fmt.Fprintln(os.Stderr, "Could not read file:", err)
+				fmt.Fprintln(term.Stderr, "Could not read file:", err)
 			}
-			fmt.Fprintln(w, string(content))
+			fmt.Fprintln(term.Stdout, string(content))
 		}
 	}
 }
@@ -101,8 +100,8 @@ func (cmd *DecryptCmd) Name() string {
 	return "decrypt"
 }
 
-func (cmd *DecryptCmd) Help(w io.Writer) {
-	fmt.Fprintln(w, `NAME
+func (cmd *DecryptCmd) Help(term *Terminal) {
+	fmt.Fprintln(term.Stdout, `NAME
     decrypt -- decrypts and file and print contents
 SYNOPSIS
 	decrypt file
@@ -110,13 +109,13 @@ DESCRIPTION
     The decrypt utility decrypts a single file and write it to standard output.`)
 }
 
-func (cmd *DecryptCmd) Run(w io.Writer, args []string) {
+func (cmd *DecryptCmd) Run(term *Terminal, args []string) {
 	if len(args) < 1 {
-		fmt.Fprintln(w, "Missing file argument")
+		fmt.Fprintln(term.Stdout, "Missing file argument")
 	} else {
 		key, err := loadKey()
 		if err != nil {
-			fmt.Fprintf(os.Stderr, "Key required to decrypt data is missing: %v\n", err)
+			fmt.Fprintf(term.Stderr, "Key required to decrypt data is missing: %v\n", err)
 			return
 		}
 
@@ -124,10 +123,10 @@ func (cmd *DecryptCmd) Run(w io.Writer, args []string) {
 			msg, err := decryptFile(key, arg)
 
 			if err != nil {
-				fmt.Fprintf(os.Stderr, "Could not read file %s: %s\n", arg, err)
+				fmt.Fprintf(term.Stderr, "Could not read file %s: %s\n", arg, err)
 				break
 			}
-			fmt.Fprintln(w, msg)
+			fmt.Fprintln(term.Stdout, msg)
 		}
 	}
 }
@@ -136,8 +135,8 @@ func (cmd *ExitCmd) Name() string {
 	return "exit"
 }
 
-func (cmd *ExitCmd) Help(w io.Writer) {
-	fmt.Fprintln(w, `NAME
+func (cmd *ExitCmd) Help(term *Terminal) {
+	fmt.Fprintln(term.Stdout, `NAME
     exit -- exit the shell
 SYNOPSIS
     exit
@@ -145,7 +144,7 @@ DESCRIPTION
     exit the mainframe shell. Logs the user out.`)
 }
 
-func (cmd *ExitCmd) Run(w io.Writer, args []string) {
+func (cmd *ExitCmd) Run(term *Terminal, args []string) {
 	os.Exit(0)
 }
 
