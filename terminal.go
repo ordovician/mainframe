@@ -72,7 +72,9 @@ func (term *Terminal) runShell() {
 		if cmd == nil {
 			fmt.Fprintln(term.Stdout, "Unknown command:", fields[0])
 		} else {
-			cmd.Run(term, fields[1:])
+			if cmd.Run(term, fields[1:]) == Quit {
+				break
+			}
 		}
 		fmt.Fprint(term.Stdout, "> ")
 	}

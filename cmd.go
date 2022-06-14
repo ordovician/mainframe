@@ -2,14 +2,22 @@ package mainframe
 
 import (
 	"fmt"
-	"os"
 	"path"
+)
+
+// Code returned when running commands such as ListCmd and CatCmd
+type ExitCode int
+
+const (
+	Ok      ExitCode = iota // normal result
+	Failure                 // Command could not complete task
+	Quit                    // request to quit shell
 )
 
 type Command interface {
 	Name() string
 	Help(term *Terminal)
-	Run(term *Terminal, args []string)
+	Run(term *Terminal, args []string) ExitCode
 }
 
 type HelpCmd struct{}
@@ -31,20 +39,21 @@ DESCRIPTION
     The help command displays help for a command.`)
 }
 
-func (cmd *HelpCmd) Run(term *Terminal, args []string) {
+func (cmd *HelpCmd) Run(term *Terminal, args []string) ExitCode {
 	if len(args) == 0 {
 		fmt.Fprintln(term.Stdout, `Valid commands:
     ls   cat   decrypt	exit   help`)
-		return
+		return Ok
 	}
 
 	helpCmd := Lookup(args[0])
 	if helpCmd == nil {
 		fmt.Fprintln(term.Stdout, "Unknown command:", args[0])
+		return Failure
 	} else {
 		helpCmd.Help(term)
 	}
-
+	return Ok
 }
 
 func (cmd *ListCmd) Name() string {
@@ -60,12 +69,13 @@ DESCRIPTION
     The ls command shows all files and directories in working directory`)
 }
 
-func (cmd *ListCmd) Run(term *Terminal, args []string) {
+func (cmd *ListCmd) Run(term *Terminal, args []string) ExitCode {
 	entries, _ := storage.ReadDir("data")
 	for _, entry := range entries {
 		fmt.Fprintln(term.Stdout, entry.Name())
 	}
 	fmt.Fprintln(term.Stdout)
+	return Ok
 }
 
 func (cmd *CatCmd) Name() string {
@@ -81,7 +91,7 @@ DESCRIPTION
     The cat utility reads files sequentually and write them to standard output.`)
 }
 
-func (cmd *CatCmd) Run(term *Terminal, args []string) {
+func (cmd *CatCmd) Run(term *Terminal, args []string) ExitCode {
 	if len(args) < 1 {
 		fmt.Fprintln(term.Stdout, "Missing file argument")
 	} else {
@@ -90,10 +100,12 @@ func (cmd *CatCmd) Run(term *Terminal, args []string) {
 			content, err := storage.ReadFile(filepath)
 			if err != nil {
 				fmt.Fprintln(term.Stderr, "Could not read file:", err)
+				return Failure
 			}
 			fmt.Fprintln(term.Stdout, string(content))
 		}
 	}
+	return Ok
 }
 
 func (cmd *DecryptCmd) Name() string {
@@ -109,14 +121,15 @@ DESCRIPTION
     The decrypt utility decrypts a single file and write it to standard output.`)
 }
 
-func (cmd *DecryptCmd) Run(term *Terminal, args []string) {
+func (cmd *DecryptCmd) Run(term *Terminal, args []string) ExitCode {
 	if len(args) < 1 {
 		fmt.Fprintln(term.Stdout, "Missing file argument")
+		return Failure
 	} else {
 		key, err := loadKey()
 		if err != nil {
 			fmt.Fprintf(term.Stderr, "Key required to decrypt data is missing: %v\n", err)
-			return
+			return Failure
 		}
 
 		for _, arg := range args {
@@ -124,11 +137,12 @@ func (cmd *DecryptCmd) Run(term *Terminal, args []string) {
 
 			if err != nil {
 				fmt.Fprintf(term.Stderr, "Could not read file %s: %s\n", arg, err)
-				break
+				return Failure
 			}
 			fmt.Fprintln(term.Stdout, msg)
 		}
 	}
+	return Ok
 }
 
 func (cmd *ExitCmd) Name() string {
@@ -144,8 +158,8 @@ DESCRIPTION
     exit the mainframe shell. Logs the user out.`)
 }
 
-func (cmd *ExitCmd) Run(term *Terminal, args []string) {
-	os.Exit(0)
+func (cmd *ExitCmd) Run(term *Terminal, args []string) ExitCode {
+	return Quit
 }
 
 var commands = [...]Command{
