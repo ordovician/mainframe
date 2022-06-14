@@ -64,4 +64,28 @@ However after building you will get local executables which you can run like thi
     Password: qwerty
     Большая Электронно-Счётная Машина 6: June 6, 2022
     Welcome to БЭСМ-6 comrade thomas
+
+
+## Running as Server and Connecting as Client
+The login program can be run as a server which you cannot to using NetCat or Telnet
+
+    ❯ go build ./cmd/server
+    ❯ ./server
+
+It will listen for connections on port 1234 (TODO Make port number user configurable).
+You can connect with telnet or netcat like this:
+
+    ❯ telnet localhost 1234
+    Trying ::1...
+    Connected to localhost.
+    Escape character is '^]'.
+    Login: thomas
+    Password: qwerty
+    Большая Электронно-Счётная Машина 6: June 14, 2022
+    Welcome to БЭСМ-6 comrade thomas
+
+Alternatively with netcat:
+
+    ❯ nc localhost 1234
+
     
