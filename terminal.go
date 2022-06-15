@@ -2,7 +2,6 @@ package mainframe
 
 import (
 	"bufio"
-	"embed"
 	"fmt"
 	"io"
 	"os"
@@ -50,9 +49,6 @@ func (term *Terminal) Login() {
 		fmt.Fprint(term.Stdout, "Username does not exist or password was wrong")
 	}
 }
-
-//go:embed data
-var storage embed.FS
 
 // runShell creates a command line where you can issue
 // simple commands such as ls and cat in a pretend Unix shell.

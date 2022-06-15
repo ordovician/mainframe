@@ -5,6 +5,7 @@ import (
 	"crypto/aes"
 	"crypto/cipher"
 	"crypto/rand"
+	"embed"
 	"encoding/base32"
 	"encoding/base64"
 	"encoding/hex"
@@ -14,6 +15,9 @@ import (
 	"os"
 	"path"
 )
+
+//go:embed data
+var storage embed.FS
 
 // Makes it easier for user to supply an encoding
 // format we use for keys or encrypted date
