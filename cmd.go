@@ -1,9 +1,14 @@
 package mainframe
 
 import (
+	_ "embed"
 	"fmt"
 	"path"
+	"strings"
 )
+
+//go:embed key.base64.txt
+var cryptKey string
 
 // Code returned when running commands such as ListCmd and CatCmd
 type ExitCode int
@@ -126,20 +131,25 @@ func (cmd *DecryptCmd) Run(term *Terminal, args []string) ExitCode {
 		fmt.Fprintln(term.Stdout, "Missing file argument")
 		return Failure
 	} else {
-		key, err := loadKey()
+		keystorage := strings.NewReader(cryptKey)
+		key, err := LoadEncodedKey(keystorage, Base64)
 		if err != nil {
 			fmt.Fprintf(term.Stderr, "Key required to decrypt data is missing: %v\n", err)
 			return Failure
 		}
 
+		cip, err := NewCipher(key)
+		if err != nil {
+			return Failure
+		}
 		for _, arg := range args {
-			msg, err := decryptFile(key, arg)
+			msg, err := cip.DecryptFile(arg)
 
 			if err != nil {
 				fmt.Fprintf(term.Stderr, "Could not read file %s: %s\n", arg, err)
 				return Failure
 			}
-			fmt.Fprintln(term.Stdout, msg)
+			fmt.Fprintln(term.Stdout, string(msg))
 		}
 	}
 	return Ok
