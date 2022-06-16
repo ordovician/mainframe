@@ -1,19 +1,22 @@
 package main
 
 import (
-	. "github.com/ordovician/mainframe"
 	"log"
 	"os"
+
+	. "github.com/ordovician/mainframe"
 )
 
 var debug *log.Logger = log.New(os.Stdout, "DEBUG: ", 0)
 
 func main() {
 	term := &Terminal{
-		os.Stdin,
-		os.Stdout,
-		os.Stderr,
+		Stdin:  os.Stdin,
+		Stdout: os.Stdout,
+		Stderr: os.Stderr,
 	}
 
-	term.Login()
+	if err := term.Login(); err != nil {
+		log.Fatal(err)
+	}
 }

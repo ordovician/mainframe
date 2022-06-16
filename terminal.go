@@ -4,7 +4,6 @@ import (
 	"bufio"
 	"fmt"
 	"io"
-	"os"
 	"strings"
 	"time"
 )
@@ -17,20 +16,18 @@ type Terminal struct {
 
 // Perform login assuming user is connected through the stdin and stdout defined
 // by the terminal object.
-func (term *Terminal) Login() {
+func (term *Terminal) Login() error {
 	scanner := bufio.NewScanner(term.Stdin)
 	fmt.Fprint(term.Stdout, "Login: ")
 	if !scanner.Scan() {
-		fmt.Fprintln(term.Stderr, "Unable to get login name:", scanner.Err())
-		os.Exit(1)
+		return fmt.Errorf("unable to get login name: %w", scanner.Err())
 	}
 
 	user := scanner.Text()
 
 	fmt.Fprint(term.Stdout, "Password: ")
 	if !scanner.Scan() {
-		fmt.Fprintln(term.Stderr, "Unable to get password:", scanner.Err())
-		os.Exit(1)
+		return fmt.Errorf("unable to get password: %w", scanner.Err())
 	}
 
 	passwd := scanner.Text()
@@ -44,10 +41,11 @@ func (term *Terminal) Login() {
 
 		term.runShell()
 	} else if err != nil {
-		fmt.Fprintln(term.Stderr, "Could not log in because:", err)
+		return fmt.Errorf("could not log in because: %w", err)
 	} else {
-		fmt.Fprint(term.Stdout, "Username does not exist or password was wrong")
+		return fmt.Errorf("username does not exist or password was wrong")
 	}
+	return nil
 }
 
 // runShell creates a command line where you can issue

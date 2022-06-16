@@ -57,6 +57,9 @@ func main() {
 
 // handles a single connection from a client
 func handleClientConnection(conn net.Conn) {
+	// close socket connection when done or in case of panic
+	defer conn.Close()
+
 	reader := bufio.NewReader(conn)
 
 	term := &Terminal{
@@ -65,8 +68,8 @@ func handleClientConnection(conn net.Conn) {
 		Stderr: conn,
 	}
 
-	term.Login()
-
-	// close socket connection
-	conn.Close()
+	if err := term.Login(); err != nil {
+		log.SetPrefix("ERROR: ")
+		log.Print(err)
+	}
 }
