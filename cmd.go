@@ -10,15 +10,6 @@ import (
 //go:embed key.base64.txt
 var cryptKey string
 
-// Code returned when running commands such as ListCmd and CatCmd
-type ExitCode int
-
-const (
-	Ok      ExitCode = iota // normal result
-	Failure                 // Command could not complete task
-	Quit                    // request to quit shell
-)
-
 type Command interface {
 	Name() string
 	Help(term *Terminal)
